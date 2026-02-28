@@ -1,111 +1,175 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Testimonials</title>
-<!-- <script type="module" src="main.js"></script> -->
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script defer src="main.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Testimonials</title>
+  <!-- <script type="module" src="main.js"></script> -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="main.js"></script>
 </head>
+
 <body class="bg-[#F4EFE6] text-stone-800">
 
 
-<header class="sticky top-0 bg-white shadow-sm z-50">
-<div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between px-4 md:px-6 py-4 gap-3">
+  <header class="sticky top-0 bg-white shadow-sm z-50">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between px-4 md:px-6 py-4 gap-3">
 
-<h1 class="text-xl md:text-2xl font-semibold text-green-900">
-Brahmyayurved
-</h1>
+      <h1 class="text-xl md:text-2xl font-semibold text-green-900">
+        Brahmyayurved
+      </h1>
 
-<nav class="flex flex-wrap justify-center gap-4 md:gap-6 text-sm md:text-base font-medium">
-<a href="index.html" class="text-green-800 hover:text-green-600">Home</a>
-<a href="products.html" class="text-green-800 hover:text-green-600">Products</a>
-<a href="about.html" class="text-green-800 hover:text-green-600">About</a>
-<a href="testimonials.html" class="text-green-800 hover:text-green-600">Testimonials</a>
-</nav>
+      <nav class="flex flex-wrap justify-center gap-4 md:gap-6 text-sm md:text-base font-medium">
+        <a href="index.html" class="text-green-800 hover:text-green-600">Home</a>
+        <a href="products.html" class="text-green-800 hover:text-green-600">Products</a>
+        <a href="about.html" class="text-green-800 hover:text-green-600">About</a>
+        <a href="testimonials.html" class="text-green-800 hover:text-green-600">Testimonials</a>
+      </nav>
 
-</div>
-</header>
-
-
-<section class="max-w-5xl mx-auto py-16 px-6">
-
-<h3 class="text-xl font-semibold mb-4">Add Your Review</h3>
-
-<input id="name" placeholder="Your Name"
-class="border p-3 rounded w-full mb-4">
-
-<!-- STAR RATING -->
-<div class="mb-4">
-<p class="mb-2 font-medium">Your Rating:</p>
-<div id="starRating" class="text-3xl cursor-pointer select-none">
-<span data-value="1">☆</span>
-<span data-value="2">☆</span>
-<span data-value="3">☆</span>
-<span data-value="4">☆</span>
-<span data-value="5">☆</span>
-</div>
-</div>
-
-<textarea id="reviewText" placeholder="Write your review..."
-class="border p-3 rounded w-full mb-4"></textarea>
-
-<!-- IMAGE UPLOAD -->
-<div class="mb-4">
-<label class="block mb-2 font-medium">Upload Image (optional)</label>
-<input type="file" id="reviewImage" accept="image/*"
-class="border p-2 rounded w-full">
-
-<!-- Image Preview -->
-<img id="imagePreview" class="mt-4 max-h-48 rounded hidden" />
-</div>
-
-<button onclick="addReview()"
-class="bg-green-700 text-white px-6 py-2 rounded mb-8">
-Submit Review
-</button>
-
-<h2 class="text-3xl font-semibold mb-8">Customer Reviews</h2>
-
-<div id="review-gallery" 
-     class="grid grid-cols-3 md:grid-cols-6 gap-4 mb-12">
-</div>
-
-<div id="reviews" class="space-y-6 mb-12"></div>
-
-</section>
+    </div>
+  </header>
 
 
-<footer class="bg-green-900 text-white p-8 text-center text-sm mt-16">
-<p>© 2026 Brahmyayurved | Online Orders Only</p>
-<p class="mt-2">Email: brahmyayurved@gmail.com | Phone: +91 7219248924</p>
-</footer>
+  <section class="max-w-5xl mx-auto py-16 px-6">
 
-<a href="https://wa.me/917219248924" 
-class="fixed bottom-6 right-6 bg-green-600 text-white px-5 py-3 rounded-full shadow-lg">
-WhatsApp
-</a>
+    <h3 class="text-xl font-semibold mb-4">Add Your Review</h3>
 
-<!-- IMAGE PREVIEW MODAL -->
-<div id="imageModal" 
-     class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50">
+    <input id="name" placeholder="Your Name" class="border p-3 rounded w-full mb-4">
 
-  <div class="bg-white p-6 rounded-lg max-w-lg w-full relative">
-    
-    <button onclick="closeModal()" 
-            class="absolute top-2 right-3 text-xl font-bold">
-      ✕
+    <!-- STAR RATING -->
+    <div class="mb-4">
+      <p class="mb-2 font-medium">Your Rating:</p>
+      <div id="starRating" class="text-3xl cursor-pointer select-none">
+        <span data-value="1">☆</span>
+        <span data-value="2">☆</span>
+        <span data-value="3">☆</span>
+        <span data-value="4">☆</span>
+        <span data-value="5">☆</span>
+      </div>
+    </div>
+
+    <select id="productSelect" class="border p-3 rounded w-full mb-4">
+      <option value="">Select Product</option>
+      <option value="Soap">Soap</option>
+      <option value="Churna">Churna(Powder)</option>
+      <option value="Hair Oil">Ayurvedic Hair Oil</option>
+      <option value="Combo">Combo</option>
+    </select>
+
+    <textarea id="reviewText" placeholder="Write your review..." class="border p-3 rounded w-full mb-4"></textarea>
+
+    <!-- IMAGE UPLOAD -->
+    <div class="mb-4">
+      <label class="block mb-2 font-medium">Upload Image (optional)</label>
+      <input type="file" id="reviewImage" accept="image/*" class="border p-2 rounded w-full">
+
+      <!-- Image Preview -->
+      <img id="imagePreview" class="mt-4 max-h-48 rounded hidden" />
+    </div>
+
+    <button onclick="addReview()" class="bg-green-700 text-white px-6 py-2 rounded mb-8">
+      Submit Review
     </button>
 
-    <img id="modalImage" class="w-full rounded-lg mb-4">
+    <h2 class="text-3xl font-semibold mb-2">
+      Customer Reviews
+      <span id="reviewCount" class="text-lg text-gray-500 font-normal">(0)</span>
+    </h2>
 
-    <p class="font-semibold" id="modalName"></p>
-    <p class="text-sm text-gray-500" id="modalDate"></p>
+    <div id="review-gallery" class="grid grid-cols-4 md:grid-cols-8 gap-3 mb-12">
+    </div>
 
+    <div id="reviews" class="space-y-6 mb-12"></div>
+
+  </section>
+
+
+  <footer class="bg-green-900 text-white p-8 text-center text-sm mt-16">
+    <p>© 2026 Brahmyayurved | Online Orders Only</p>
+    <p class="mt-2">Email: brahmyayurved@gmail.com | Phone: +91 7219248924</p>
+  </footer>
+
+  <a href="https://wa.me/917219248924"
+    class="fixed bottom-6 right-6 bg-green-600 text-white px-5 py-3 rounded-full shadow-lg">
+    WhatsApp
+  </a>
+
+  <!-- IMAGE PREVIEW MODAL -->
+  <div id="imageModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-[9999] p-4">
+
+    <!-- modal card -->
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl relative
+              max-h-[90vh] flex flex-col">
+
+      <!-- close button -->
+      <button onclick="closeModal()" class="absolute top-3 right-4 text-2xl font-bold text-gray-700 hover:text-black">
+        ✕
+      </button>
+
+      <!-- image container -->
+      <div class="flex-1 flex items-center justify-center overflow-hidden p-4">
+        <img id="modalImage" class="max-h-[60vh] max-w-full object-contain rounded-lg">
+      </div>
+
+      <!-- details -->
+      <div class="px-6 pb-6 text-center border-t">
+
+        <!-- customer name -->
+        <div class="flex items-center justify-between w-fit min-w-full mt-3">
+
+          <!-- LEFT : customer name -->
+          <p id="modalName" class="font-semibold text-base sm:text-lg">
+          </p>
+
+          <!-- RIGHT : rating -->
+          <div id="modalRating" class="text-yellow-500 text-lg sm:text-xl tracking-wide flex gap-0.5">
+          </div>
+
+        </div>
+
+        <!-- review text -->
+        <div class="mt-3 max-h-32 overflow-y-auto">
+          <p id="modalReview" class="text-gray-700 leading-relaxed whitespace-pre-line">
+          </p>
+        </div>
+
+        <!-- date -->
+        <p class="text-sm text-gray-500 mt-3" id="modalDate"></p>
+
+      </div>
+
+    </div>
   </div>
-</div>
+
+  <!-- FULL GALLERY -->
+  <div id="fullGalleryModal" class="fixed inset-0 bg-black/80 hidden z-[900] overflow-y-auto">
+
+    <!-- THIS IS THE CONTENT WE WILL BLUR -->
+    <div id="fullGalleryContent" class="max-w-6xl mx-auto bg-white mt-10 p-6 rounded-lg transition-all duration-300">
+
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-2xl font-semibold">All Customer Images</h3>
+
+        <button onclick="closeFullGallery()" class="text-xl font-bold">✕</button>
+      </div>
+
+      <!-- FILTER -->
+      <select id="galleryFilter" class="border p-2 rounded mb-6" onchange="filterGallery()">
+        <option value="all">All Products</option>
+        <option value="Soap">Soap</option>
+        <option value="Churna">Churna(Powder)</option>
+        <option value="Hair Oil">Ayurvedic Hair Oil</option>
+        <option value="Combo">Combo</option>
+      </select>
+
+      <div id="fullGalleryGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      </div>
+
+    </div>
+  </div>
 
 </body>
+
 </html>

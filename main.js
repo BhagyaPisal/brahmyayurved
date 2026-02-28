@@ -168,82 +168,117 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // ================= SUPABASE CONFIG =================
 
-const supabaseUrl = "https://tdpqappqxoufohoutbfj.supabase.co";
-const supabaseKey = "sb_publishable_AxGXKvrQhfOL9FZvO3miMw_DGY3mkVB";
+// const supabaseUrl = "https://tdpqappqxoufohoutbfj.supabase.co";
+// const supabaseKey = "sb_publishable_AxGXKvrQhfOL9FZvO3miMw_DGY3mkVB";
 
-const supabaseClient = window.supabase.createClient(
-  supabaseUrl,
-  supabaseKey
-);
+// const supabaseClient = window.supabase.createClient(
+//   supabaseUrl,
+//   supabaseKey
+// );
 
 // ================= LOAD REVIEWS =================
-
+let reviews = [];
 async function loadReviews() {
 
-  const { data, error } = await supabaseClient
-    .from("reviews")
-    .select("*")
-    .order("created_at", { ascending: false });
+  try {
 
-  if (error) {
-    console.error("Error loading reviews:", error);
-    return;
-  }
+    const response = await fetch("http://localhost:5000/reviews");
+    // const response = await fetch("https://brahmyayurved-backend.onrender.com/reviews"); // Production
 
-  console.log("Reviews loaded:", data);
+    const data = await response.json();
 
-  /* ===============================
-     TESTIMONIAL PAGE SECTION
-  =============================== */
+    // store globally for gallery modal filtering
+    reviews = data || [];
 
-  const reviewsDiv = document.getElementById("reviews");
-  const galleryDiv = document.getElementById("review-gallery");
+    console.log("Reviews loaded:", reviews);
 
-  if (reviewsDiv) {
-
-    // IMAGE GALLERY
-    if (galleryDiv) {
-      const images = data.filter(r => r.image_url);
-
-      galleryDiv.innerHTML = images.map(r => `
-        <img 
-          src="${r.image_url}" 
-          data-name="${r.name}"
-          data-date="${new Date(r.created_at).toLocaleDateString()}"
-          class="w-24 h-24 object-cover rounded-lg cursor-pointer hover:scale-105 transition"
-        >
-      `).join("");
+    // Review count
+    const countEl = document.getElementById("reviewCount");
+    if (countEl) {
+      countEl.innerText = `(${reviews.length})`;
     }
 
-    // REVIEWS LIST
-    reviewsDiv.innerHTML = data.map(r => {
-      const stars = "★".repeat(r.rating) + "☆".repeat(5 - r.rating);
+    /* ===============================
+       TESTIMONIAL PAGE SECTION
+    =============================== */
 
-      return `
-        <div class="bg-white p-6 rounded-lg shadow">
-          <div class="flex items-center justify-between">
-            <h4 class="font-semibold text-lg">${r.name}</h4>
-            <span class="text-yellow-500 text-lg">${stars}</span>
+    const reviewsDiv = document.getElementById("reviews");
+    const galleryDiv = document.getElementById("review-gallery");
+
+    /* ---------- IMAGE GALLERY (8 preview + more tile) ---------- */
+    if (galleryDiv) {
+
+      galleryDiv.innerHTML = "";
+
+      // only reviews with images
+      let imageReviews = reviews.filter(r => r.image_url);
+
+      const maxPreview = 7;
+
+      // show first 8 images
+      imageReviews.slice(0, maxPreview).forEach(review => {
+
+        const img = document.createElement("img");
+        const fileName = review.image_url.split("/").pop();
+        img.src = `http://localhost:5000/review-image/${fileName}`;
+        img.className =
+          "w-full h-24 object-cover rounded-lg cursor-pointer hover:scale-105 transition";
+
+        img.onclick = () => openModal(review);
+
+        galleryDiv.appendChild(img);
+      });
+
+      // "+X more" tile
+      if (imageReviews.length > maxPreview) {
+
+        const moreDiv = document.createElement("div");
+
+        moreDiv.className =
+          "flex items-center justify-center bg-gray-200 h-24 rounded-lg text-lg font-semibold cursor-pointer hover:bg-gray-300";
+
+        moreDiv.innerText = `+${imageReviews.length - maxPreview}`;
+
+        moreDiv.onclick = openFullGallery;
+
+        galleryDiv.appendChild(moreDiv);
+      }
+    }
+
+    /* ---------- REVIEWS LIST ---------- */
+    if (reviewsDiv) {
+
+      reviewsDiv.innerHTML = reviews.map(r => {
+
+        const stars = "★".repeat(r.rating) + "☆".repeat(5 - r.rating);
+
+        return `
+          <div class="bg-white p-6 rounded-lg shadow">
+            <div class="flex items-center justify-between">
+              <h4 class="font-semibold text-lg">${r.name}</h4>
+              <span class="text-yellow-500 text-lg">${stars}</span>
+            </div>
+
+            <p class="mt-3 text-stone-700">
+              ${r.review_comment || ""}
+            </p>
           </div>
+        `;
+      }).join("");
+    }
 
-          <p class="mt-3 text-stone-700">
-            ${r.review_comment}
-          </p>
-        </div>
-      `;
-    }).join("");
+    /* ===============================
+       HOME PAGE SECTION
+    =============================== */
 
-    initImagePreview();
-  }
+    const homeReviews = document.getElementById("home-reviews");
 
-  /* ===============================
-     HOME PAGE SECTION
-  =============================== */
+    if (homeReviews) {
+      renderHomeReviews(reviews, homeReviews);
+    }
 
-  const homeReviews = document.getElementById("home-reviews");
-
-  if (homeReviews) {
-    renderHomeReviews(data, homeReviews);
+  } catch (err) {
+    console.error("Failed to load reviews:", err);
   }
 }
 
@@ -260,61 +295,61 @@ async function addReview() {
   const name = document.getElementById("name").value.trim();
   const text = document.getElementById("reviewText").value.trim();
   const imageFile = document.getElementById("reviewImage").files[0];
+  const product = document.getElementById("productSelect").value;
 
   if (!name || selectedRating === 0) {
     alert("Please add name and rating");
     return;
   }
 
-  let imageUrl = null;
+  const formData = new FormData();
+  formData.append("name", name);
+  formData.append("rating", selectedRating);
+  formData.append("review_comment", text);
+  formData.append("product", product);
 
-  // Upload image if selected
   if (imageFile) {
-    const fileName = `${Date.now()}-${imageFile.name}`;
-
-    const { data, error } = await supabaseClient.storage
-      .from("review-images")
-      .upload(fileName, imageFile);
-
-    if (error) {
-      console.error(error);
-      alert("Image upload failed");
-      return;
-    }
-
-    const { data: publicUrlData } = supabaseClient.storage
-      .from("review-images")
-      .getPublicUrl(fileName);
-
-    imageUrl = publicUrlData.publicUrl;
+    formData.append("image", imageFile);
   }
 
-  // Insert review
-  const { error } = await supabaseClient.from("reviews").insert([
-    {
-      name,
-      review_comment: text,
-      rating: selectedRating,
-      image_url: imageUrl
+  try {
+    const response = await fetch("http://localhost:5000/reviews", {
+      method: "POST",
+      body: formData
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw result;
     }
-  ]);
 
-  if (error) {
-    console.error(error);
-    alert("Error submitting review");
-    return;
+    alert("Review submitted successfully!");
+
+    document.getElementById("name").value = "";
+    document.getElementById("reviewText").value = "";
+    document.getElementById("reviewImage").value = "";
+    document.getElementById("imagePreview").classList.add("hidden");
+
+    selectedRating = 0;
+    resetStars();
+    loadReviews();
+
+
+  } catch (err) {
+    console.error(err);
+    alert("Failed to submit review");
   }
+}
 
-  alert("Review submitted successfully!");
+function resetStars() {
+  const stars = document.querySelectorAll("#starRating span");
 
-  document.getElementById("name").value = "";
-  document.getElementById("reviewText").value = "";
-  document.getElementById("reviewImage").value = "";
-  document.getElementById("imagePreview").classList.add("hidden");
-
-  selectedRating = 0;
-
-  loadReviews();
+  stars.forEach(star => {
+    star.textContent = "☆";
+    star.classList.remove("text-yellow-500");
+    star.classList.add("text-gray-400");
+  });
 }
 
 // ================= HOME REVIEW SCROLLER =================
@@ -323,7 +358,7 @@ function renderHomeReviews(reviews, container) {
 
   const reviewHTML = reviews.map(r => {
     const stars = "★".repeat(r.rating) + "☆".repeat(5 - r.rating);
-
+    const fileName = r.image_url.split("/").pop();
     return `
   <div class="bg-white p-6 rounded-lg shadow lg:col-span-3">
     
@@ -344,7 +379,7 @@ function renderHomeReviews(reviews, container) {
       <!-- RIGHT IMAGE -->
       ${r.image_url ? `
         <div class="w-20 h-20 flex-shrink-0">
-          <img src="${r.image_url}" 
+          <img src="http://localhost:5000/review-image/${fileName}" 
                class="w-full h-full object-cover rounded-lg">
         </div>
       ` : ""}
@@ -375,6 +410,15 @@ function initImagePreview() {
       document.getElementById("modalImage").src = img.src;
       document.getElementById("modalName").innerText = "Uploaded by: " + img.dataset.name;
       document.getElementById("modalDate").innerText = "On: " + img.dataset.date;
+      // ⭐ RATING
+      const stars =
+        "★".repeat(review.rating) + "☆".repeat(5 - review.rating);
+
+      document.getElementById("modalRating").innerText = stars;
+
+      // REVIEW TEXT
+      document.getElementById("modalReview").innerText =
+        review.review_comment;
 
       document.getElementById("imageModal").classList.remove("hidden");
       document.getElementById("imageModal").classList.add("flex");
@@ -382,7 +426,73 @@ function initImagePreview() {
   });
 }
 
+function openModal(review) {
+  const fileName = review.image_url.split("/").pop();
+  document.getElementById("modalImage").src = `http://localhost:5000/review-image/${fileName}`;
+  document.getElementById("modalName").innerText = "Uploaded by: " + review.name;
+  document.getElementById("modalDate").innerText = "On: " + review.created_at;
+  // ⭐ RATING
+      const stars =
+        "★".repeat(review.rating) + "☆".repeat(5 - review.rating);
+
+      document.getElementById("modalRating").innerText = stars;
+
+      // REVIEW TEXT
+      document.getElementById("modalReview").innerText =
+        review.review_comment;
+
+  document.getElementById("imageModal").classList.remove("hidden");
+  document.getElementById("imageModal").classList.add("flex");
+}
+
 function closeModal() {
   document.getElementById("imageModal").classList.add("hidden");
   document.getElementById("imageModal").classList.remove("flex");
+  const gallery = document.getElementById("fullGalleryContent");
+  if (gallery) gallery.classList.remove("blur-sm", "scale-[0.98]", "opacity-70");
+}
+
+function openFullGallery() {
+  document.getElementById("fullGalleryModal").classList.remove("hidden");
+  loadFullGallery("all");
+}
+
+function closeFullGallery() {
+  document.getElementById("fullGalleryModal").classList.add("hidden");
+  const gallery = document.getElementById("fullGalleryModal");
+}
+
+function loadFullGallery(filter) {
+
+  const grid = document.getElementById("fullGalleryGrid");
+  grid.innerHTML = "";
+
+  reviews.forEach(r => {
+
+    if (!r.image_url) return;
+
+    if (filter !== "all" && r.product !== filter) return;
+
+    const img = document.createElement("img");
+    const fileName = r.image_url.split("/").pop();
+    img.src = `http://localhost:5000/review-image/${fileName}`;
+    img.className = "w-full h-40 object-cover rounded cursor-pointer";
+    img.onclick = () => {
+
+      // hide full gallery first
+      const gallery = document.getElementById("fullGalleryContent");
+      if (gallery) {
+        if (gallery) gallery.classList.add("blur-sm", "scale-[0.98]", "opacity-70");
+      }
+
+      openModal(r)
+    };
+
+    grid.appendChild(img);
+  });
+}
+
+function filterGallery() {
+  const value = document.getElementById("galleryFilter").value;
+  loadFullGallery(value);
 }
